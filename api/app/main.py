@@ -1,6 +1,9 @@
 from fastapi import FastAPI
 from app.config import settings
 from app.db import get_connection
+import logging
+
+logging.basicConfig(level=logging.INFO)
 
 app = FastAPI()
 
