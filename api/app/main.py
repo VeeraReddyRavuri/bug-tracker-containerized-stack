@@ -2,6 +2,7 @@ from fastapi import FastAPI
 from app.config import settings
 from app.db import get_connection
 import logging
+import socket
 
 logging.basicConfig(level=logging.INFO)
 
@@ -31,3 +32,7 @@ def health_check():
         "status": "ok",
         "db_host": settings.DB_HOST
     }
+
+@app.get("/whoami")
+def whoami():
+    return {"container": socket.gethostname()}
