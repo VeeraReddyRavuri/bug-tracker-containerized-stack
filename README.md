@@ -12,6 +12,58 @@ Production-style containerized system demonstrating service communication, scali
 
 This project demonstrates how to design and operate a containerized multi-service architecture using FastAPI, PostgreSQL, and Nginx, focusing on real-world concerns like service communication, failure handling, and debugging.
 
+## [Architecture Diagram](/docs/architecture.md)
+
+```mermaid
+flowchart TD
+
+    Client["Client (Browser / Curl)"]
+
+    Nginx["Nginx Reverse Proxy\nPort: 8080"]
+
+    subgraph DockerNetwork["Docker Bridge Network"]
+        API1["API Container 1 (FastAPI)"]
+        API2["API Container 2 (FastAPI)"]
+        DB["PostgreSQL Database"]
+    end
+
+    Volume["Docker Volume (Persistent Storage)"]
+
+    Client --> Nginx
+    Nginx --> API1
+    Nginx --> API2
+
+    API1 --> DB
+    API2 --> DB
+
+    DB --> Volume
+```
+## Tech Stack
+
+* **Backend**: FastAPI (Python)
+* **Database**: PostgreSQL
+* **Reverse Proxy**: Nginx
+* **Containerization**: Docker
+* **Orchestration**: Docker Compose
+* **Networking**: Docker Bridge Network (DNS-based service discovery)
+
+## Engineering Highlights
+
+- **Multi-Stage Docker Build** — Reduced image size from ~1.1GB to ~95MB 
+  by separating build dependencies from the final runtime image
+- **Graceful Shutdown (SIGTERM)** — FastAPI handles shutdown lifecycle events 
+  to close DB connections cleanly before container exits
+- **Non-Root Container** — Runs as an unprivileged user; follows least-privilege principle
+- **Health Checks** — All three services define healthcheck blocks; 
+  Compose waits for dependency readiness before routing traffic
+- **Resource Limits** — CPU and memory constraints defined per service in Compose
+- **Horizontal Scaling** — Nginx upstream configured to load balance across 
+  multiple API replicas (`--scale api=2`)
+- **Persistent Storage** — Named volume ensures PostgreSQL data survives container restarts
+- **Custom Bridge Network** — Services communicate via Docker DNS (service names), 
+  not hardcoded IPs
+- **Environment Isolation** — All secrets managed via `.env`; never committed to Git
+
 ## Demo
 
 ### 1. Health Check
@@ -65,58 +117,6 @@ docker compose logs api
 ```
 ERROR:app.db:DB connection failed: could not translate host name "db"
 ```
-
-## [Architecture Diagram](/docs/architecture.md)
-
-```mermaid
-flowchart TD
-
-    Client["Client (Browser / Curl)"]
-
-    Nginx["Nginx Reverse Proxy\nPort: 8080"]
-
-    subgraph DockerNetwork["Docker Bridge Network"]
-        API1["API Container 1 (FastAPI)"]
-        API2["API Container 2 (FastAPI)"]
-        DB["PostgreSQL Database"]
-    end
-
-    Volume["Docker Volume (Persistent Storage)"]
-
-    Client --> Nginx
-    Nginx --> API1
-    Nginx --> API2
-
-    API1 --> DB
-    API2 --> DB
-
-    DB --> Volume
-```
-## Tech Stack
-
-* **Backend**: FastAPI (Python)
-* **Database**: PostgreSQL
-* **Reverse Proxy**: Nginx
-* **Containerization**: Docker
-* **Orchestration**: Docker Compose
-* **Networking**: Docker Bridge Network (DNS-based service discovery)
-
-## Engineering Highlights
-
-- **Multi-Stage Docker Build** — Reduced image size from ~1.1GB to ~95MB 
-  by separating build dependencies from the final runtime image
-- **Graceful Shutdown (SIGTERM)** — FastAPI handles shutdown lifecycle events 
-  to close DB connections cleanly before container exits
-- **Non-Root Container** — Runs as an unprivileged user; follows least-privilege principle
-- **Health Checks** — All three services define healthcheck blocks; 
-  Compose waits for dependency readiness before routing traffic
-- **Resource Limits** — CPU and memory constraints defined per service in Compose
-- **Horizontal Scaling** — Nginx upstream configured to load balance across 
-  multiple API replicas (`--scale api=2`)
-- **Persistent Storage** — Named volume ensures PostgreSQL data survives container restarts
-- **Custom Bridge Network** — Services communicate via Docker DNS (service names), 
-  not hardcoded IPs
-- **Environment Isolation** — All secrets managed via `.env`; never committed to Git
 
 ## How to Run
 
