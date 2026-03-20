@@ -6,13 +6,67 @@
 ![Nginx](https://img.shields.io/badge/Nginx-009639?style=flat&logo=nginx&logoColor=white)
 ![Python](https://img.shields.io/badge/Python-3776AB?style=flat&logo=python&logoColor=white)
 
+Production-style containerized system demonstrating service communication, scaling, and failure debugging using FastAPI, PostgreSQL, and Nginx.
+
 ## Overview
 
-A containerized Bug Tracker API built to demonstrate production-grade 
-Docker and Compose patterns — multi-stage builds, service orchestration, 
-reverse proxying, horizontal scaling, and operational hardening.
+This project demonstrates how to design and operate a containerized multi-service architecture using FastAPI, PostgreSQL, and Nginx, focusing on real-world concerns like service communication, failure handling, and debugging.
 
-## Architecture Diagram
+## Demo
+
+### 1. Health Check
+
+```bash
+curl http://localhost:8080/health
+```
+
+```json
+{"status": "ok", "db_host": "db"}
+```
+
+### 2. Database Connectivity
+
+```bash
+curl http://localhost:8080/api/db-check
+```
+
+```json
+{"db": "connected"}
+```
+
+### 3. Load Balancing Across API Containers
+
+```bash
+curl http://localhost:8080/api/whoami
+```
+
+```json
+{"container": "api-1"}
+{"container": "api-2"}
+```
+
+### 4. Failure Handling (Database Down)
+
+```bash
+docker compose stop db
+curl http://localhost:8080/api/db-check
+```
+
+```json
+{"db": "failed"}
+```
+
+### 5. Error Logs (Observed)
+
+```bash
+docker compose logs api
+```
+
+```
+ERROR:app.db:DB connection failed: could not translate host name "db"
+```
+
+## [Architecture Diagram](/docs/architecture.md)
 
 ```mermaid
 flowchart TD
@@ -47,7 +101,49 @@ flowchart TD
 * **Orchestration**: Docker Compose
 * **Networking**: Docker Bridge Network (DNS-based service discovery)
 
----
+## Engineering Highlights
+
+- **Multi-Stage Docker Build** — Reduced image size from ~1.1GB to ~95MB 
+  by separating build dependencies from the final runtime image
+- **Graceful Shutdown (SIGTERM)** — FastAPI handles shutdown lifecycle events 
+  to close DB connections cleanly before container exits
+- **Non-Root Container** — Runs as an unprivileged user; follows least-privilege principle
+- **Health Checks** — All three services define healthcheck blocks; 
+  Compose waits for dependency readiness before routing traffic
+- **Resource Limits** — CPU and memory constraints defined per service in Compose
+- **Horizontal Scaling** — Nginx upstream configured to load balance across 
+  multiple API replicas (`--scale api=2`)
+- **Persistent Storage** — Named volume ensures PostgreSQL data survives container restarts
+- **Custom Bridge Network** — Services communicate via Docker DNS (service names), 
+  not hardcoded IPs
+- **Environment Isolation** — All secrets managed via `.env`; never committed to Git
+
+## How to Run
+
+### 1. Clone the repository
+
+```bash
+git clone <your-repo-url>
+cd bug-tracker-containerized-stack
+```
+
+### 2. Create `.env`
+
+```bash
+cp .env.example .env
+```
+
+### 3. Start the system
+
+```bash
+docker compose up -d --build
+```
+
+### 4. Access services
+
+* Health Check → http://localhost:8080/health
+* DB Check → http://localhost:8080/api/db-check
+* Load Balancing Test → http://localhost:8080/api/whoami
 
 ## Project Structure
 
@@ -82,60 +178,6 @@ bug-tracker-containerized-stack/
 └── README.md
 ```
 
----
-
-## How to Run
-
-### 1. Clone the repository
-
-```bash
-git clone <your-repo-url>
-cd bug-tracker-containerized-stack
-```
-
----
-
-### 2. Create `.env`
-
-```bash
-cp .env.example .env
-```
-
----
-
-### 3. Start the system
-
-```bash
-docker compose up -d --build
-```
-
----
-
-### 4. Access services
-
-* Health Check → http://localhost:8080/health
-* DB Check → http://localhost:8080/api/db-check
-* Load Balancing Test → http://localhost:8080/api/whoami
-
----
-
-## Engineering Highlights
-
-- **Multi-Stage Docker Build** — Reduced image size from ~1.1GB to ~95MB 
-  by separating build dependencies from the final runtime image
-- **Graceful Shutdown (SIGTERM)** — FastAPI handles shutdown lifecycle events 
-  to close DB connections cleanly before container exits
-- **Non-Root Container** — Runs as an unprivileged user; follows least-privilege principle
-- **Health Checks** — All three services define healthcheck blocks; 
-  Compose waits for dependency readiness before routing traffic
-- **Resource Limits** — CPU and memory constraints defined per service in Compose
-- **Horizontal Scaling** — Nginx upstream configured to load balance across 
-  multiple API replicas (`--scale api=2`)
-- **Persistent Storage** — Named volume ensures PostgreSQL data survives container restarts
-- **Custom Bridge Network** — Services communicate via Docker DNS (service names), 
-  not hardcoded IPs
-- **Environment Isolation** — All secrets managed via `.env`; never committed to Git
-
 ## Optimization Metrics
 
 * Initial Image Size: ~225MB
@@ -159,7 +201,7 @@ Each scenario includes:
 * Debugging steps
 * Fix applied
 
-## ⚠️ Limitations
+## Limitations
 
 * No authentication or authorization
 * No HTTPS (HTTP only)
@@ -195,3 +237,5 @@ Each scenario includes:
 This project focuses on **understanding systems, not just building features**.
 
 It demonstrates how services interact, fail, and recover — which is critical for Cloud, DevOps, and SRE roles.
+
+**Version:** v1.0.0
