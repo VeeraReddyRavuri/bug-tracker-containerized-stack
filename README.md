@@ -1,16 +1,28 @@
 # Bug Tracker Containerized Stack
 
+> System that simulates how containerized services interact, fail, and recover in real-world environments.
+
 ![Docker](https://img.shields.io/badge/Docker-2CA5E0?style=flat&logo=docker&logoColor=white)
 ![FastAPI](https://img.shields.io/badge/FastAPI-009688?style=flat&logo=fastapi&logoColor=white)
 ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-316192?style=flat&logo=postgresql&logoColor=white)
 ![Nginx](https://img.shields.io/badge/Nginx-009639?style=flat&logo=nginx&logoColor=white)
 ![Python](https://img.shields.io/badge/Python-3776AB?style=flat&logo=python&logoColor=white)
 
-Production-style containerized system demonstrating service communication, scaling, and failure debugging using FastAPI, PostgreSQL, and Nginx.
+## TL;DR
+
+- Built a multi-service containerized system using FastAPI, PostgreSQL, and Nginx
+- Implemented service-to-service communication via Docker networking (DNS-based)
+- Simulated real failure scenarios (DB downtime, DNS issues, misconfigurations)
+- Demonstrated debugging of distributed system failures using logs and network behavior
+- Optimized container image size by ~46% using multi-stage builds
+
+---
 
 ## Overview
 
 This project demonstrates how to design and operate a containerized multi-service architecture using FastAPI, PostgreSQL, and Nginx, focusing on real-world concerns like service communication, failure handling, and debugging.
+
+---
 
 ## [Architecture Diagram](/docs/architecture.md)
 
@@ -38,6 +50,9 @@ flowchart TD
 
     DB --> Volume
 ```
+
+---
+
 ## Tech Stack
 
 * **Backend**: FastAPI (Python)
@@ -47,7 +62,9 @@ flowchart TD
 * **Orchestration**: Docker Compose
 * **Networking**: Docker Bridge Network (DNS-based service discovery)
 
-## Engineering Highlights
+---
+
+## Key Engineering Decisions
 
 - **Multi-Stage Docker Build** — Reduced image size from ~1.1GB to ~95MB 
   by separating build dependencies from the final runtime image
@@ -63,6 +80,8 @@ flowchart TD
 - **Custom Bridge Network** — Services communicate via Docker DNS (service names), 
   not hardcoded IPs
 - **Environment Isolation** — All secrets managed via `.env`; never committed to Git
+
+---
 
 ## Demo
 
@@ -118,6 +137,8 @@ docker compose logs api
 ERROR:app.db:DB connection failed: could not translate host name "db"
 ```
 
+---
+
 ## How to Run
 
 ### 1. Clone the repository
@@ -144,6 +165,8 @@ docker compose up -d --build
 * Health Check → http://localhost:8080/health
 * DB Check → http://localhost:8080/api/db-check
 * Load Balancing Test → http://localhost:8080/api/whoami
+
+---
 
 ## Project Structure
 
@@ -178,11 +201,28 @@ bug-tracker-containerized-stack/
 └── README.md
 ```
 
+---
+
 ## Optimization Metrics
 
 * Initial Image Size: ~225MB
 * Optimized Image (Alpine + Multi-stage): ~120MB
 * Reduction: ~46%
+
+---
+
+## Where This Fits
+
+This project represents the **application layer** in a cloud system.
+
+While infrastructure defines where services run, this project focuses on:
+- how services communicate
+- how failures propagate
+- how systems behave under load and misconfiguration
+
+It complements infrastructure-focused work by demonstrating runtime behavior.
+
+---
 
 ## Failure Scenarios & Debugging
 
@@ -201,6 +241,26 @@ Each scenario includes:
 * Debugging steps
 * Fix applied
 
+---
+
+## Design Decisions & Tradeoffs
+
+- **Docker Compose vs Kubernetes**
+  Chose Docker Compose to focus on understanding service interaction,
+  networking, and failure modes before introducing orchestration complexity.
+
+- **Nginx as reverse proxy**
+  Used to simulate real-world traffic routing and load balancing across services.
+
+- **Multiple API replicas**
+  Demonstrates horizontal scaling and highlights challenges in distributed systems.
+
+- **PostgreSQL as single instance**
+  Simplifies setup while allowing focus on application-level failure scenarios.
+  In production, this would require replication and failover strategies.
+
+---
+
 ## Limitations
 
 * No authentication or authorization
@@ -211,6 +271,8 @@ Each scenario includes:
 * No monitoring/metrics
 * No database migration system
 * Not deployed on Kubernetes
+
+---
 
 ## Future Improvements
 
@@ -224,6 +286,8 @@ Each scenario includes:
 * Add rate limiting and API gateway features
 * Improve resilience with retry mechanisms and circuit breakers
 
+---
+
 ## What This Project Demonstrates
 
 * Real-world container networking
@@ -232,10 +296,14 @@ Each scenario includes:
 * Handling failure scenarios gracefully
 * Production-style infrastructure design
 
+---
+
 ## Summary
 
 This project focuses on **understanding systems, not just building features**.
 
 It demonstrates how services interact, fail, and recover — which is critical for Cloud, DevOps, and SRE roles.
+
+---
 
 **Version:** v1.0.0
